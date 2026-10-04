@@ -1,0 +1,6 @@
+{
+  "name": "Edify Chef",
+  "description": "Kitchen order management and cooking display system for Edify Chef & FoodKing restaurants.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
