@@ -191,6 +191,7 @@ class KitchenViewModel(
 
     fun refreshKitchenData() {
         viewModelScope.launch {
+            repository.fetchPublicLiveRestaurantData()
             repository.fetchLiveKitchenData()
         }
     }

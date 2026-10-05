@@ -79,6 +79,7 @@ fun ProfileScreen(
         FoodKingTopBar(
             selectedLanguage = selectedLanguage,
             onLanguageSelected = { viewModel.setLanguage(it) },
+            onRefresh = { viewModel.refreshKitchenData() },
             modifier = Modifier.background(Color.White)
         )
 

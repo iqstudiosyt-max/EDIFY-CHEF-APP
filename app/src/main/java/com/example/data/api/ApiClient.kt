@@ -10,8 +10,10 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-    var apiKey: String = ""
+    // Current server API key for https://food.eventrra.pk
+    var apiKey: String = "base64:nMGyee1i/mHbu8RIljg7+0NDCmRWqlFAEyBiG2GZVpk="
     var currentBaseUrl: String = BuildConfig.BASE_URL
+    var token: String = ""
 
     private val moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
@@ -31,9 +33,12 @@ object ApiClient {
                 val requestBuilder = original.newBuilder()
                     .header("Accept", "application/json")
                     .header("Content-Type", "application/json")
+                    .header("x-api-key", apiKey)
 
-                // FoodKing requires x-api-key header to always be present
-                requestBuilder.header("x-api-key", apiKey)
+                if (token.isNotBlank()) {
+                    val authHeader = if (token.startsWith("Bearer ")) token else "Bearer $token"
+                    requestBuilder.header("Authorization", authHeader)
+                }
 
                 chain.proceed(requestBuilder.build())
             }
@@ -58,11 +63,8 @@ object ApiClient {
     }
 
     private fun initService() {
-        val formattedBaseUrl = if (currentBaseUrl.endsWith("/")) {
-            if (currentBaseUrl.endsWith("/api/")) currentBaseUrl else "${currentBaseUrl}api/"
-        } else {
-            "${currentBaseUrl}/api/"
-        }
+        val base = if (currentBaseUrl.endsWith("/")) currentBaseUrl else "$currentBaseUrl/"
+        val formattedBaseUrl = if (base.endsWith("/api/")) base else "${base}api/"
 
         _apiService = Retrofit.Builder()
             .baseUrl(formattedBaseUrl)

@@ -38,10 +38,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.ui.components.FoodKingTopBar
 import com.example.ui.components.OrderStatsChart
 import com.example.ui.components.StatsCard
@@ -283,12 +285,21 @@ fun DashboardScreen(
                                             .background(Color(0xFFFFF1F2)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Fastfood,
-                                            contentDescription = item.name,
-                                            tint = FoodKingPrimary,
-                                            modifier = Modifier.size(24.dp)
-                                        )
+                                        if (!item.imageUrl.isNullOrBlank()) {
+                                            AsyncImage(
+                                                model = item.imageUrl,
+                                                contentDescription = item.name,
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = Icons.Default.Fastfood,
+                                                contentDescription = item.name,
+                                                tint = FoodKingPrimary,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
                                     }
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
