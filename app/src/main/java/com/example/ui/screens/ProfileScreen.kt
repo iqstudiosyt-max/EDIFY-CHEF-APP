@@ -44,10 +44,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.ui.components.FoodKingTopBar
 import com.example.ui.theme.AppBackground
 import com.example.ui.theme.BorderLight
@@ -109,12 +111,23 @@ fun ProfileScreen(
                     .border(2.dp, FoodKingPrimary, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Avatar",
-                    tint = Color(0xFF64748B),
-                    modifier = Modifier.size(54.dp)
-                )
+                if (!profile.avatarUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = profile.avatarUrl,
+                        contentDescription = "Avatar",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Avatar",
+                        tint = Color(0xFF64748B),
+                        modifier = Modifier.size(54.dp)
+                    )
+                }
             }
 
             Box(
@@ -122,7 +135,7 @@ fun ProfileScreen(
                     .size(28.dp)
                     .clip(CircleShape)
                     .background(FoodKingPrimary)
-                    .clickable { /* change photo */ },
+                    .clickable { viewModel.navigateTo(CurrentScreen.EDIT_PROFILE) },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -136,26 +149,30 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // User Name & details
+        // User Name & details from API
         Text(
-            text = "${profile.firstName} ${profile.lastName}",
+            text = profile.name,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = TextPrimary,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
-        Text(
-            text = profile.email,
-            fontSize = 12.sp,
-            color = TextSecondary,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
-        Text(
-            text = profile.phone,
-            fontSize = 12.sp,
-            color = TextSecondary,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
+        if (profile.email.isNotBlank()) {
+            Text(
+                text = profile.email,
+                fontSize = 12.sp,
+                color = TextSecondary,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        }
+        if (profile.phone.isNotBlank()) {
+            Text(
+                text = if (profile.phone.startsWith("+")) profile.phone else "${profile.countryCode} ${profile.phone}",
+                fontSize = 12.sp,
+                color = TextSecondary,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        }
 
         Spacer(modifier = Modifier.height(18.dp))
 

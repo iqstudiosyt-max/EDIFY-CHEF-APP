@@ -24,6 +24,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -34,6 +35,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import com.example.data.model.OrderStatus
 import com.example.ui.components.FoodKingTopBar
 import com.example.ui.components.OrderCard
@@ -60,6 +63,15 @@ fun TodayOrdersScreen(
         OrderStatus.PREPARING,
         OrderStatus.DONE
     )
+
+    // Auto-refresh orders every 15 seconds while on Orders tab
+    LaunchedEffect(Unit) {
+        viewModel.refreshKitchenData()
+        while (isActive) {
+            delay(15_000L)
+            viewModel.refreshKitchenData()
+        }
+    }
 
     Column(
         modifier = modifier

@@ -32,12 +32,12 @@ class KitchenRepository {
 
     private val _userProfile = MutableStateFlow(
         UserProfile(
-            firstName = "Chef",
-            lastName = "Staff",
-            email = "chef@food.eventrra.pk",
+            name = "Chef Staff",
+            email = "info@food.eventrra.pk",
             phone = "+923000135314",
             countryCode = "+92",
-            branch = "Lahore (main)"
+            branch = "Lahore (main)",
+            avatarUrl = null
         )
     )
     val userProfile: StateFlow<UserProfile> = _userProfile.asStateFlow()
@@ -103,7 +103,7 @@ class KitchenRepository {
     }
 
     /**
-     * Fetches public restaurant config, live branch, and menu items from API Client
+     * Fetches public restaurant config, live branch, contact details and menu items from API Client
      * Accessible without Bearer token using x-api-key
      */
     suspend fun fetchPublicLiveRestaurantData() {
@@ -125,7 +125,6 @@ class KitchenRepository {
                         }
                         _liveBranches.value = branchList
 
-                        // Default to first active branch or main branch
                         val mainBranch = branchList.firstOrNull { it.second.contains("main", ignoreCase = true) }
                             ?: branchList.firstOrNull()
 
@@ -152,19 +151,23 @@ class KitchenRepository {
                     if (dataObj != null) {
                         val companyName = dataObj.optString("company_name", "GFC Restaurant")
                         val companyPhone = dataObj.optString("company_phone", "+923000135314")
+                        val companyEmail = dataObj.optString("company_email", "info@food.eventrra.pk")
+                        val companyCountryCode = dataObj.optString("company_country_code", "+92")
+                        val themeLogo = dataObj.optString("theme_logo", null)
                         val prepTime = dataObj.optInt("order_setup_food_preparation_time", 30)
 
                         _dashboardOverview.update {
                             it.copy(avgPrepTimeMin = prepTime)
                         }
 
-                        if (_userProfile.value.branch.isEmpty() || _userProfile.value.branch == "Boshundhora R/A") {
-                            _userProfile.update {
-                                it.copy(
-                                    branch = companyName,
-                                    phone = companyPhone
-                                )
-                            }
+                        _userProfile.update { current ->
+                            current.copy(
+                                branch = if (current.branch.isBlank() || current.branch == "Boshundhora R/A") companyName else current.branch,
+                                phone = if (current.phone.isBlank() && companyPhone.isNotBlank()) companyPhone else current.phone,
+                                email = if (current.email.isBlank() && companyEmail.isNotBlank()) companyEmail else current.email,
+                                countryCode = if (current.countryCode.isBlank()) companyCountryCode else current.countryCode,
+                                avatarUrl = if (current.avatarUrl.isNullOrBlank() && !themeLogo.isNullOrBlank()) themeLogo else current.avatarUrl
+                            )
                         }
                     }
                 }
@@ -197,11 +200,6 @@ class KitchenRepository {
                         }
                         if (liveItems.isNotEmpty()) {
                             _popularItems.value = liveItems
-
-                            // Also populate orders and items board with live items if orders are empty
-                            if (_orders.value.isEmpty()) {
-                                populateOrdersFromLiveItems(liveItems)
-                            }
                         }
                     }
                 }
@@ -211,168 +209,9 @@ class KitchenRepository {
         }
     }
 
-    private fun populateOrdersFromLiveItems(liveItems: List<PopularMenuItem>) {
-        if (liveItems.isEmpty()) return
-
-        val sampleOrders = mutableListOf<KitchenOrder>()
-        val item1 = liveItems.getOrNull(0) ?: liveItems.first()
-        val item2 = liveItems.getOrNull(1) ?: liveItems.first()
-        val item3 = liveItems.getOrNull(2) ?: liveItems.first()
-        val item4 = liveItems.getOrNull(3) ?: liveItems.first()
-
-        sampleOrders.add(
-            KitchenOrder(
-                id = 2563987L,
-                orderNumber = "#2563987",
-                orderType = OrderType.ONLINE_DELIVERY,
-                status = OrderStatus.CONFIRMED,
-                scheduleTime = "11:00 AM - 11:30 AM",
-                orderDate = "4:47 pm, 16 Jun 2022",
-                items = listOf(
-                    OrderItem(101, item1.name, 1, "Standard", listOf("Dip Sauce")),
-                    OrderItem(102, item2.name, 2, "Standard")
-                )
-            )
-        )
-
-        sampleOrders.add(
-            KitchenOrder(
-                id = 2563988L,
-                orderNumber = "#2563988",
-                orderType = OrderType.DINE_IN,
-                status = OrderStatus.CONFIRMED,
-                tableNo = "03",
-                tokenNo = "105",
-                orderDate = "4:47 pm, 16 Jun 2022",
-                items = listOf(
-                    OrderItem(103, item3.name, 1, "Regular", listOf("Extra Crisp")),
-                    OrderItem(104, item1.name, 2, "Standard")
-                )
-            )
-        )
-
-        sampleOrders.add(
-            KitchenOrder(
-                id = 2563989L,
-                orderNumber = "#2563989",
-                orderType = OrderType.TAKEAWAY,
-                status = OrderStatus.CONFIRMED,
-                tokenNo = "146",
-                orderDate = "4:47 pm, 16 Jun 2022",
-                items = listOf(
-                    OrderItem(105, item4.name, 1, "Full Meal")
-                )
-            )
-        )
-
-        sampleOrders.add(
-            KitchenOrder(
-                id = 2563990L,
-                orderNumber = "#2563990",
-                orderType = OrderType.ONLINE_DELIVERY,
-                status = OrderStatus.PREPARING,
-                scheduleTime = "11:00 AM - 11:30 AM",
-                orderDate = "4:47 pm, 16 Jun 2022",
-                items = listOf(
-                    OrderItem(106, item2.name, 1, "Standard", listOf("Extra Spicy")),
-                    OrderItem(107, item3.name, 2, "Regular")
-                )
-            )
-        )
-
-        sampleOrders.add(
-            KitchenOrder(
-                id = 2563991L,
-                orderNumber = "#2563991",
-                orderType = OrderType.DINE_IN,
-                status = OrderStatus.PREPARING,
-                tableNo = "03",
-                tokenNo = "105",
-                orderDate = "4:47 pm, 16 Jun 2022",
-                items = listOf(
-                    OrderItem(108, item1.name, 1, "Standard", listOf("Dip Sauce")),
-                    OrderItem(109, item4.name, 2, "Full Meal")
-                )
-            )
-        )
-
-        sampleOrders.add(
-            KitchenOrder(
-                id = 2563992L,
-                orderNumber = "#2563992",
-                orderType = OrderType.TAKEAWAY,
-                status = OrderStatus.PREPARING,
-                tokenNo = "146",
-                orderDate = "4:47 pm, 16 Jun 2022",
-                items = listOf(
-                    OrderItem(110, item2.name, 1, "Standard")
-                )
-            )
-        )
-
-        sampleOrders.add(
-            KitchenOrder(
-                id = 2563970L,
-                orderNumber = "#2563970",
-                orderType = OrderType.ONLINE_DELIVERY,
-                status = OrderStatus.DONE,
-                scheduleTime = "11:00 AM - 11:30 AM",
-                orderDate = "4:47 pm, 16 Jun 2022",
-                items = listOf(
-                    OrderItem(111, item1.name, 1, "Standard", listOf("Dip Sauce")),
-                    OrderItem(112, item3.name, 2, "Regular")
-                )
-            )
-        )
-
-        sampleOrders.add(
-            KitchenOrder(
-                id = 2563971L,
-                orderNumber = "#2563971",
-                orderType = OrderType.DINE_IN,
-                status = OrderStatus.DONE,
-                tableNo = "03",
-                tokenNo = "105",
-                orderDate = "4:47 pm, 16 Jun 2022",
-                items = listOf(
-                    OrderItem(113, item2.name, 1, "Standard", listOf("Extra Crisp")),
-                    OrderItem(114, item4.name, 2, "Full Meal")
-                )
-            )
-        )
-
-        sampleOrders.add(
-            KitchenOrder(
-                id = 2563972L,
-                orderNumber = "#2563972",
-                orderType = OrderType.TAKEAWAY,
-                status = OrderStatus.DONE,
-                tokenNo = "146",
-                orderDate = "4:47 pm, 16 Jun 2022",
-                items = listOf(
-                    OrderItem(115, item1.name, 1, "Standard")
-                )
-            )
-        )
-
-        _orders.value = sampleOrders
-        recalculateOverview()
-        _itemsBoard.value = getItemsBoardList()
-    }
-
     fun loginDemo() {
         _authToken.value = "Bearer demo-kitchen-token"
         ApiClient.token = "demo-kitchen-token"
-        _userProfile.update {
-            it.copy(
-                firstName = "Chef",
-                lastName = "In-Charge",
-                email = "chef@food.eventrra.pk",
-                phone = "+923000135314",
-                countryCode = "+92",
-                branch = if (it.branch.isNotBlank() && it.branch != "Boshundhora R/A") it.branch else "Lahore (main)"
-            )
-        }
         repositoryScope.launch {
             fetchPublicLiveRestaurantData()
         }
@@ -407,18 +246,20 @@ class KitchenRepository {
                 val userData = json.optJSONObject("data")
                 if (userData != null) {
                     val name = userData.optString("name", "Chef")
-                    val names = name.split(" ")
                     val uEmail = userData.optString("email", email)
-                    val phone = userData.optString("phone", "+923000135314")
+                    val phone = userData.optString("phone", "")
+                    val countryCode = userData.optString("country_code", "+92")
                     val branchName = userData.optString("branch_name", "")
+                    val avatar = userData.optString("image", userData.optString("avatar", null))
 
                     _userProfile.update {
                         it.copy(
-                            firstName = names.firstOrNull() ?: "Chef",
-                            lastName = names.drop(1).joinToString(" ").ifEmpty { "" },
-                            email = uEmail,
-                            phone = phone,
-                            branch = if (branchName.isNotBlank()) branchName else it.branch
+                            name = if (name.isNotBlank()) name else it.name,
+                            email = if (uEmail.isNotBlank()) uEmail else it.email,
+                            phone = if (phone.isNotBlank()) phone else it.phone,
+                            countryCode = if (countryCode.isNotBlank()) countryCode else it.countryCode,
+                            branch = if (branchName.isNotBlank()) branchName else it.branch,
+                            avatarUrl = if (!avatar.isNullOrBlank()) avatar else it.avatarUrl
                         )
                     }
                 }
@@ -483,16 +324,20 @@ class KitchenRepository {
                 if (profJson != null) {
                     val data = profJson.optJSONObject("data")
                     if (data != null) {
-                        val name = data.optString("name", "Chef")
-                        val names = name.split(" ")
+                        val name = data.optString("name", "")
+                        val email = data.optString("email", "")
+                        val phone = data.optString("phone", "")
+                        val countryCode = data.optString("country_code", "")
                         val branchName = data.optString("branch_name", "")
+                        val image = data.optString("image", data.optString("avatar", data.optString("thumb", null)))
                         _userProfile.update {
                             it.copy(
-                                firstName = names.firstOrNull() ?: it.firstName,
-                                lastName = names.drop(1).joinToString(" ").ifEmpty { it.lastName },
-                                email = data.optString("email", it.email),
-                                phone = data.optString("phone", it.phone),
-                                branch = if (branchName.isNotBlank()) branchName else it.branch
+                                name = if (name.isNotBlank()) name else it.name,
+                                email = if (email.isNotBlank()) email else it.email,
+                                phone = if (phone.isNotBlank()) phone else it.phone,
+                                countryCode = if (countryCode.isNotBlank()) countryCode else it.countryCode,
+                                branch = if (branchName.isNotBlank()) branchName else it.branch,
+                                avatarUrl = if (!image.isNullOrBlank()) image else it.avatarUrl
                             )
                         }
                     }
@@ -511,7 +356,7 @@ class KitchenRepository {
                 if (bJson != null) {
                     val bData = bJson.optJSONArray("data")
                     if (bData != null && bData.length() > 0) {
-                        val firstBranch = bData.getJSONObject(0).optString("name")
+                        val firstBranch = bData.optJSONObject(0)?.optString("name") ?: ""
                         if (firstBranch.isNotBlank()) {
                             _userProfile.update { it.copy(branch = firstBranch) }
                         }
@@ -523,28 +368,94 @@ class KitchenRepository {
         }
 
         try {
-            // 3. Fetch live KDS orders via /api/admin/kds-order
-            val orderRes = ApiClient.apiService.getKdsOrders()
-            if (orderRes.isSuccessful) {
-                val orderStr = orderRes.body()?.string()
-                val orderJson = parseJsonObjectOrNull(orderStr)
-                if (orderJson != null) {
-                    val dataArray = orderJson.optJSONArray("data")
-                    if (dataArray != null && dataArray.length() > 0) {
-                        val parsedOrders = mutableListOf<KitchenOrder>()
-                        for (i in 0 until dataArray.length()) {
-                            val obj = dataArray.getJSONObject(i)
-                            parsedOrders.add(parseKitchenOrder(obj))
-                        }
-                        if (parsedOrders.isNotEmpty()) {
-                            _orders.value = parsedOrders
-                            recalculateOverview()
+            // 3. Fetch live orders from KDS, Online, POS, and Table endpoints
+            val parsedOrders = mutableListOf<KitchenOrder>()
+
+            // KDS Orders
+            try {
+                val orderRes = ApiClient.apiService.getKdsOrders()
+                if (orderRes.isSuccessful) {
+                    val orderStr = orderRes.body()?.string()
+                    val orderJson = parseJsonObjectOrNull(orderStr)
+                    if (orderJson != null) {
+                        val dataArray = orderJson.optJSONArray("data")
+                        if (dataArray != null && dataArray.length() > 0) {
+                            for (i in 0 until dataArray.length()) {
+                                dataArray.optJSONObject(i)?.let {
+                                    parsedOrders.add(parseKitchenOrder(it))
+                                }
+                            }
                         }
                     }
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching kds orders", e)
             }
+
+            // Online Orders
+            try {
+                val onlineRes = ApiClient.apiService.getOnlineOrders()
+                if (onlineRes.isSuccessful) {
+                    val onlineJson = parseJsonObjectOrNull(onlineRes.body()?.string())
+                    val dataArray = onlineJson?.optJSONArray("data")
+                    if (dataArray != null && dataArray.length() > 0) {
+                        for (i in 0 until dataArray.length()) {
+                            val ordObj = dataArray.optJSONObject(i) ?: continue
+                            val ord = parseKitchenOrder(ordObj)
+                            if (parsedOrders.none { it.id == ord.id }) {
+                                parsedOrders.add(ord)
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching online orders", e)
+            }
+
+            // POS Orders
+            try {
+                val posRes = ApiClient.apiService.getPosOrders()
+                if (posRes.isSuccessful) {
+                    val posJson = parseJsonObjectOrNull(posRes.body()?.string())
+                    val dataArray = posJson?.optJSONArray("data")
+                    if (dataArray != null && dataArray.length() > 0) {
+                        for (i in 0 until dataArray.length()) {
+                            val ordObj = dataArray.optJSONObject(i) ?: continue
+                            val ord = parseKitchenOrder(ordObj)
+                            if (parsedOrders.none { it.id == ord.id }) {
+                                parsedOrders.add(ord)
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching pos orders", e)
+            }
+
+            // Table Orders
+            try {
+                val tableRes = ApiClient.apiService.getTableOrders()
+                if (tableRes.isSuccessful) {
+                    val tableJson = parseJsonObjectOrNull(tableRes.body()?.string())
+                    val dataArray = tableJson?.optJSONArray("data")
+                    if (dataArray != null && dataArray.length() > 0) {
+                        for (i in 0 until dataArray.length()) {
+                            val ordObj = dataArray.optJSONObject(i) ?: continue
+                            val ord = parseKitchenOrder(ordObj)
+                            if (parsedOrders.none { it.id == ord.id }) {
+                                parsedOrders.add(ord)
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching table orders", e)
+            }
+
+            _orders.value = parsedOrders
+            recalculateOverview()
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching KDS orders", e)
+            Log.e(TAG, "Error fetching orders", e)
         }
 
         try {
@@ -558,7 +469,7 @@ class KitchenRepository {
                     if (dataArray != null && dataArray.length() > 0) {
                         val list = mutableListOf<ItemsBoardItem>()
                         for (i in 0 until dataArray.length()) {
-                            val itm = dataArray.getJSONObject(i)
+                            val itm = dataArray.optJSONObject(i) ?: continue
                             list.add(
                                 ItemsBoardItem(
                                     id = itm.optString("id", "$i"),
@@ -663,9 +574,8 @@ class KitchenRepository {
             Log.e(TAG, "Error fetching total orders", e)
         }
 
-        if (_itemsBoard.value.isEmpty()) {
-            _itemsBoard.value = getItemsBoardList()
-        }
+        // Only aggregate items board if real orders exist
+        _itemsBoard.value = getItemsBoardList()
     }
 
     private fun parseKitchenOrder(obj: JSONObject): KitchenOrder {
@@ -699,23 +609,24 @@ class KitchenRepository {
         val itemsArray = obj.optJSONArray("order_items") ?: obj.optJSONArray("items")
         if (itemsArray != null) {
             for (j in 0 until itemsArray.length()) {
-                val itm = itemsArray.getJSONObject(j)
+                val itm = itemsArray.optJSONObject(j) ?: continue
                 itemsList.add(
                     OrderItem(
                         id = itm.optLong("id", j.toLong()),
                         name = itm.optString("item_name", itm.optString("name", "Item")),
                         quantity = itm.optInt("quantity", 1),
                         size = itm.optString("item_variation_name", itm.optString("size", null)),
-                        extras = listOfNotNull(itm.optString("instruction", null).takeIf { !it.isNullOrBlank() })
+                        extras = listOfNotNull(itm.optString("instruction", null).takeIf { !it.isNullOrBlank() }),
+                        price = itm.optString("total_currency_price", itm.optString("currency_price", "Rs. ${itm.optString("price", "0")}")),
+                        image = itm.optString("item_image", itm.optString("thumb", itm.optString("image", null)))
                     )
                 )
             }
         }
 
-        if (itemsList.isEmpty()) {
-            val popItem = _popularItems.value.firstOrNull()?.name ?: "Tangy Masala Wings"
-            itemsList.add(OrderItem(1, popItem, 1, "Standard", null))
-        }
+        val userObj = obj.optJSONObject("user") ?: obj.optJSONObject("customer")
+        val customerName = userObj?.optString("name") ?: obj.optString("customer_name", null)
+        val totalAmount = obj.optString("total_currency_price", obj.optString("total_amount_price", obj.optString("total", null)))
 
         return KitchenOrder(
             id = id,
@@ -726,7 +637,9 @@ class KitchenRepository {
             tableNo = tableNo,
             tokenNo = tokenNo,
             orderDate = orderDate,
-            items = itemsList
+            items = itemsList,
+            customerName = customerName,
+            totalAmount = totalAmount
         )
     }
 
@@ -749,22 +662,41 @@ class KitchenRepository {
         // PENDING: 1, ACCEPT: 4, PREPARING: 7, PREPARED: 8, OUT_FOR_DELIVERY: 10, DELIVERED: 13, CANCELED: 16
         val token = _authToken.value
         if (token != null && !token.contains("demo")) {
+            val statusInt = when (newStatus) {
+                OrderStatus.CONFIRMED -> 4
+                OrderStatus.PREPARING -> 7
+                OrderStatus.DONE -> 8
+                OrderStatus.CANCELLED -> 16
+            }
+            val body = mapOf<String, Any>(
+                "id" to orderId,
+                "status" to statusInt
+            )
+
+            // Update on online-order, pos-order, table-order, and kds-order so backend dropdown updates
             try {
-                val statusString = when (newStatus) {
-                    OrderStatus.CONFIRMED -> "4"
-                    OrderStatus.PREPARING -> "7"
-                    OrderStatus.DONE -> "8"
-                    OrderStatus.CANCELLED -> "16"
-                }
-                val body = mapOf("id" to "$orderId", "status" to statusString)
-                val kdsRes = ApiClient.apiService.changeKdsOrderStatus(orderId = orderId, body = body)
-                Log.d(TAG, "changeKdsOrderStatus for order $orderId to $statusString response code: ${kdsRes.code()}")
-                if (!kdsRes.isSuccessful) {
-                    ApiClient.apiService.changeOnlineOrderStatus(orderId = orderId, body = body)
-                    ApiClient.apiService.changePosOrderStatus(orderId = orderId, body = body)
-                }
+                val onlineRes = ApiClient.apiService.changeOnlineOrderStatus(orderId = orderId, body = body)
+                Log.d(TAG, "changeOnlineOrderStatus for order $orderId to $statusInt response code: ${onlineRes.code()}")
             } catch (e: Exception) {
-                Log.e(TAG, "Error updating status on server", e)
+                Log.e(TAG, "Error changing online order status", e)
+            }
+            try {
+                val posRes = ApiClient.apiService.changePosOrderStatus(orderId = orderId, body = body)
+                Log.d(TAG, "changePosOrderStatus for order $orderId to $statusInt response code: ${posRes.code()}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error changing pos order status", e)
+            }
+            try {
+                val tableRes = ApiClient.apiService.changeTableOrderStatus(orderId = orderId, body = body)
+                Log.d(TAG, "changeTableOrderStatus for order $orderId to $statusInt response code: ${tableRes.code()}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error changing table order status", e)
+            }
+            try {
+                val kdsRes = ApiClient.apiService.changeKdsOrderStatus(orderId = orderId, body = body)
+                Log.d(TAG, "changeKdsOrderStatus for order $orderId to $statusInt response code: ${kdsRes.code()}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error changing kds order status", e)
             }
         }
 
@@ -772,16 +704,14 @@ class KitchenRepository {
     }
 
     suspend fun updateProfile(
-        firstName: String,
-        lastName: String,
+        name: String,
         email: String,
         phone: String,
         countryCode: String
     ): Result<Boolean> {
         _userProfile.update {
             it.copy(
-                firstName = firstName,
-                lastName = lastName,
+                name = name,
                 email = email,
                 phone = phone,
                 countryCode = countryCode
@@ -793,7 +723,7 @@ class KitchenRepository {
             try {
                 ApiClient.apiService.updateProfile(
                     body = mapOf(
-                        "name" to "$firstName $lastName".trim(),
+                        "name" to name,
                         "email" to email,
                         "phone" to phone,
                         "country_code" to countryCode
@@ -869,19 +799,6 @@ class KitchenRepository {
             }
         }
 
-        return if (aggregated.isNotEmpty()) {
-            aggregated.values.toList()
-        } else {
-            // Use live menu items for empty items board
-            _popularItems.value.take(6).mapIndexed { idx, p ->
-                ItemsBoardItem(
-                    id = "$idx",
-                    name = p.name,
-                    size = "Regular",
-                    extras = null,
-                    count = (idx % 3) + 1
-                )
-            }
-        }
+        return aggregated.values.toList()
     }
 }

@@ -196,9 +196,9 @@ class KitchenViewModel(
         }
     }
 
-    fun updateProfile(firstName: String, lastName: String, email: String, phone: String, countryCode: String) {
+    fun updateProfile(name: String, email: String, phone: String, countryCode: String) {
         viewModelScope.launch {
-            repository.updateProfile(firstName, lastName, email, phone, countryCode)
+            repository.updateProfile(name, email, phone, countryCode)
             _profileMessage.value = "Profile updated successfully!"
             _currentScreen.value = CurrentScreen.MAIN
             _currentTab.value = MainTab.PROFILE

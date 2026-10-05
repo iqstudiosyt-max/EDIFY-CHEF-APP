@@ -60,7 +60,7 @@ interface FoodKingApiService {
     @POST("admin/kds-order/change-status/{order}")
     suspend fun changeKdsOrderStatus(
         @Path("order") orderId: Long,
-        @Body body: Map<String, String>
+        @Body body: Map<String, Any>
     ): Response<ResponseBody>
 
     @GET("admin/kds-order/items")
@@ -75,7 +75,7 @@ interface FoodKingApiService {
     @POST("admin/online-order/change-status/{order}")
     suspend fun changeOnlineOrderStatus(
         @Path("order") orderId: Long,
-        @Body body: Map<String, String>
+        @Body body: Map<String, Any>
     ): Response<ResponseBody>
 
     @GET("admin/pos-order")
@@ -86,7 +86,19 @@ interface FoodKingApiService {
     @POST("admin/pos-order/change-status/{order}")
     suspend fun changePosOrderStatus(
         @Path("order") orderId: Long,
-        @Body body: Map<String, String>
+        @Body body: Map<String, Any>
+    ): Response<ResponseBody>
+
+    // Table Orders
+    @GET("admin/table-order")
+    suspend fun getTableOrders(
+        @Query("status") status: String? = null
+    ): Response<ResponseBody>
+
+    @POST("admin/table-order/change-status/{order}")
+    suspend fun changeTableOrderStatus(
+        @Path("order") orderId: Long,
+        @Body body: Map<String, Any>
     ): Response<ResponseBody>
 
     // Dashboard Analytics

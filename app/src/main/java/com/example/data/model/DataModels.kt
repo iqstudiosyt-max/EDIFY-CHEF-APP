@@ -19,13 +19,13 @@ data class ApiResponse<T>(
 
 @JsonClass(generateAdapter = true)
 data class UserData(
-    @Json(name = "id") val id: Long? = 1,
-    @Json(name = "name") val name: String? = "James Lubin",
-    @Json(name = "email") val email: String? = "jameslub@gmail.com",
-    @Json(name = "phone") val phone: String? = "01236454778",
-    @Json(name = "country_code") val countryCode: String? = "+880",
+    @Json(name = "id") val id: Long? = null,
+    @Json(name = "name") val name: String? = null,
+    @Json(name = "email") val email: String? = null,
+    @Json(name = "phone") val phone: String? = null,
+    @Json(name = "country_code") val countryCode: String? = null,
     @Json(name = "role") val role: String? = "Chef",
-    @Json(name = "branch_name") val branchName: String? = "Boshundhora R/A",
+    @Json(name = "branch_name") val branchName: String? = null,
     @Json(name = "image") val image: String? = null
 )
 
@@ -78,10 +78,10 @@ data class ItemsBoardItem(
 )
 
 data class DashboardOverview(
-    val totalOrders: Int = 1502,
-    val completeOrders: Int = 1492,
-    val preparingOrders: Int = 10,
-    val avgPrepTimeMin: Int = 12
+    val totalOrders: Int = 0,
+    val completeOrders: Int = 0,
+    val preparingOrders: Int = 0,
+    val avgPrepTimeMin: Int = 0
 )
 
 data class HourlyStat(
@@ -99,11 +99,13 @@ data class PopularMenuItem(
 )
 
 data class UserProfile(
-    val firstName: String = "James",
-    val lastName: String = "Lubin",
-    val email: String = "jameslub@gmail.com",
-    val phone: String = "1236454778",
-    val countryCode: String = "+880",
-    val branch: String = "Boshundhora R/A",
+    val name: String = "Chef",
+    val email: String = "info@food.eventrra.pk",
+    val phone: String = "+923000135314",
+    val countryCode: String = "+92",
+    val branch: String = "Lahore (main)",
     val avatarUrl: String? = null
-)
+) {
+    val firstName: String get() = name.split(" ").firstOrNull() ?: name
+    val lastName: String get() = name.split(" ").drop(1).joinToString(" ").ifEmpty { "" }
+}

@@ -17,12 +17,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -42,14 +44,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.ui.theme.BorderLight
 import com.example.ui.theme.FoodKingPrimary
 import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
 import com.example.ui.viewmodel.CurrentScreen
 import com.example.ui.viewmodel.KitchenViewModel
 
@@ -60,11 +65,10 @@ fun EditProfileScreen(
 ) {
     val currentProfile by viewModel.userProfile.collectAsState()
 
-    var firstName by remember { mutableStateOf(currentProfile.firstName) }
-    var lastName by remember { mutableStateOf(currentProfile.lastName) }
-    var email by remember { mutableStateOf(currentProfile.email) }
-    var phone by remember { mutableStateOf(currentProfile.phone) }
-    var countryCode by remember { mutableStateOf(currentProfile.countryCode) }
+    var name by remember(currentProfile.name) { mutableStateOf(currentProfile.name) }
+    var email by remember(currentProfile.email) { mutableStateOf(currentProfile.email) }
+    var phone by remember(currentProfile.phone) { mutableStateOf(currentProfile.phone) }
+    var countryCode by remember(currentProfile.countryCode) { mutableStateOf(currentProfile.countryCode) }
     var codeMenuExpanded by remember { mutableStateOf(false) }
 
     BackHandler {
@@ -107,55 +111,59 @@ fun EditProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Profile Avatar (Fetched from API)
+        Box(
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFE2E8F0))
+                    .border(2.dp, FoodKingPrimary, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!currentProfile.avatarUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = currentProfile.avatarUrl,
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Avatar",
+                        tint = Color(0xFF64748B),
+                        modifier = Modifier.size(54.dp)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
         ) {
-            // First Name
+            // Single Name Field (as requested: "only show the Name not first name and last name")
             Text(
-                text = "First Name",
+                text = "Name",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = TextPrimary
             )
             Spacer(modifier = Modifier.height(6.dp))
             OutlinedTextField(
-                value = firstName,
-                onValueChange = { firstName = it },
+                value = name,
+                onValueChange = { name = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("first_name_input"),
-                singleLine = true,
-                textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontSize = 14.sp),
-                shape = RoundedCornerShape(10.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    unfocusedBorderColor = Color(0xFFE2E8F0),
-                    focusedBorderColor = FoodKingPrimary,
-                    cursorColor = FoodKingPrimary
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Last Name
-            Text(
-                text = "Last Name",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = TextPrimary
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(
-                value = lastName,
-                onValueChange = { lastName = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("last_name_input"),
+                    .testTag("name_input"),
                 singleLine = true,
                 textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontSize = 14.sp),
                 shape = RoundedCornerShape(10.dp),
@@ -203,9 +211,9 @@ fun EditProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Mobile Number
+            // Phone Number (Fetched from API)
             Text(
-                text = "Mobile Number",
+                text = "Phone Number",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = TextPrimary
@@ -228,7 +236,7 @@ fun EditProfileScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "🇧🇩 $countryCode",
+                            text = countryCode,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextPrimary
@@ -244,7 +252,7 @@ fun EditProfileScreen(
                         expanded = codeMenuExpanded,
                         onDismissRequest = { codeMenuExpanded = false }
                     ) {
-                        listOf("+880", "+92", "+1", "+44", "+971", "+966").forEach { code ->
+                        listOf("+92", "+880", "+1", "+44", "+971", "+966").forEach { code ->
                             DropdownMenuItem(
                                 text = { Text(code, fontSize = 13.sp) },
                                 onClick = {
@@ -262,7 +270,7 @@ fun EditProfileScreen(
                     value = phone,
                     onValueChange = { phone = it },
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxWidth()
                         .testTag("profile_phone_input"),
                     singleLine = true,
                     textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontSize = 14.sp),
@@ -280,23 +288,22 @@ fun EditProfileScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            // Update Profile Button
+            // Save Button
             Button(
                 onClick = {
                     viewModel.updateProfile(
-                        firstName = firstName.trim(),
-                        lastName = lastName.trim(),
+                        name = name.trim(),
                         email = email.trim(),
                         phone = phone.trim(),
-                        countryCode = countryCode
+                        countryCode = countryCode.trim()
                     )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
-                    .testTag("update_profile_button"),
+                    .testTag("save_profile_button"),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = FoodKingPrimary,
@@ -304,7 +311,7 @@ fun EditProfileScreen(
                 )
             ) {
                 Text(
-                    text = "Update Profile",
+                    text = "Save Changes",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold
                 )

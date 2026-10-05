@@ -80,13 +80,27 @@ fun ItemsBoardScreen(
         Spacer(modifier = Modifier.height(10.dp))
 
         // List of Items
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(itemsBoard, key = { it.id }) { item ->
+        if (itemsBoard.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No active orders queued on the items board.",
+                    fontSize = 14.sp,
+                    color = TextSecondary
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(itemsBoard, key = { it.id }) { item ->
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -146,4 +160,5 @@ fun ItemsBoardScreen(
             }
         }
     }
+}
 }

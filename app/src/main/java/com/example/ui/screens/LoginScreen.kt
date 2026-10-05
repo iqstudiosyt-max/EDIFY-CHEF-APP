@@ -73,17 +73,11 @@ fun LoginScreen(
 ) {
     val loginState by viewModel.loginState.collectAsState()
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
-    val currentServerUrl by viewModel.serverUrl.collectAsState()
-    val currentApiKey by viewModel.apiKey.collectAsState()
 
     var email by remember { mutableStateOf("chef@eventrra.pk") }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(true) }
     var passwordVisible by remember { mutableStateOf(false) }
-
-    var showServerSettingsDialog by remember { mutableStateOf(false) }
-    var tempUrl by remember(currentServerUrl) { mutableStateOf(currentServerUrl) }
-    var tempApiKey by remember(currentApiKey) { mutableStateOf(currentApiKey) }
 
     Column(
         modifier = modifier
@@ -330,119 +324,7 @@ fun LoginScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Server & API Settings Button
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFF8FAFC))
-                    .clickable { showServerSettingsDialog = true }
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
-                    tint = Color(0xFF64748B),
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "API Key & Server Settings",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF64748B)
-                )
-            }
-
             Spacer(modifier = Modifier.height(24.dp))
         }
-    }
-
-    // Server & API Key Dialog
-    if (showServerSettingsDialog) {
-        AlertDialog(
-            onDismissRequest = { showServerSettingsDialog = false },
-            title = {
-                Text(
-                    text = "API Key & Server Settings",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-            },
-            text = {
-                Column {
-                    Text(
-                        text = "Configure API base URL and FoodKing x-api-key header:",
-                        fontSize = 12.sp,
-                        color = TextSecondary
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = "Base URL",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    OutlinedTextField(
-                        value = tempUrl,
-                        onValueChange = { tempUrl = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        textStyle = TextStyle(color = Color.Black, fontSize = 13.sp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = "x-api-key (API Key)",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    OutlinedTextField(
-                        value = tempApiKey,
-                        onValueChange = { tempApiKey = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Enter API key from server", fontSize = 12.sp) },
-                        singleLine = true,
-                        textStyle = TextStyle(color = Color.Black, fontSize = 13.sp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black
-                        )
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.updateServerSettings(tempUrl.trim(), tempApiKey.trim())
-                        showServerSettingsDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = FoodKingPrimary)
-                ) {
-                    Text("Save Settings", color = Color.White)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showServerSettingsDialog = false }) {
-                    Text("Cancel", color = TextSecondary)
-                }
-            }
-        )
     }
 }
